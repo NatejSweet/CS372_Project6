@@ -1,5 +1,6 @@
 import json
 from netfuncs import get_network, ipv4_to_value, get_subnet_mask_value, value_to_ipv4, ips_same_subnet
+from sys import argv
 
 def get_network_ip(ip, mask): # get network ip from ip and mask when mask is known
     ip = ipv4_to_value(ip)
@@ -58,15 +59,29 @@ def dijkstra(graph, source, destination):
 
 
 def main():
-    input_file = open('example1.json', 'r')
+    if len(argv) != 2:
+        print('Usage: python3 dijkstra.py <input_file.json>')
+        return
+    filename = argv[1]
+    input_file = open(filename, 'r')
     json_data = input_file.read()
     input_file.close()
     json_data = json.loads(json_data)
     graph = json_data['routers']
     src_dest = json_data['src-dest']
+    src_dst_path = []
     for src, dest in src_dest:
         path = dijkstra(graph, src, dest)
-        print('Shortest path from {} to {}: {}'.format(src, dest, path))
+        src_dst_path.append({
+            'source': src,
+            'destination': dest,
+            'path': path
+        })
+        # print('Shortest path from {} to {}: {}'.format(src, dest, path))
+    output_file = open(filename.split('.')[0]+"_output.json", 'w')
+    output_file.write(json.dumps(src_dst_path, indent=4))
+    output_file.close()
+
 
 
 
