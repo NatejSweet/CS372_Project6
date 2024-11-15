@@ -1,7 +1,6 @@
 import json
 from netfuncs import get_network, ipv4_to_value, get_subnet_mask_value, value_to_ipv4, ips_same_subnet
-from sys import argv
-
+import sys
 def get_network_ip(ip, mask): # get network ip from ip and mask when mask is known
     ip = ipv4_to_value(ip)
     mask = get_subnet_mask_value(mask)
@@ -58,33 +57,35 @@ def dijkstra(graph, source, destination):
     raise KeyError(f"No path found from {source} to {destination}")
 
 
-def main():
-    if len(argv) != 2:
-        print('Usage: python3 dijkstra.py <input_file.json>')
-        return
-    filename = argv[1]
-    input_file = open(filename, 'r')
-    json_data = input_file.read()
-    input_file.close()
-    json_data = json.loads(json_data)
-    graph = json_data['routers']
-    src_dest = json_data['src-dest']
-    src_dst_path = []
-    for src, dest in src_dest:
-        path = dijkstra(graph, src, dest)
-        src_dst_path.append({
-            'source': src,
-            'destination': dest,
-            'path': path
-        })
-        # print('Shortest path from {} to {}: {}'.format(src, dest, path))
-    output_file = open(filename.split('.')[0]+"_output.json", 'w')
-    output_file.write(json.dumps(src_dst_path, indent=4))
-    output_file.close()
 
 
+def read_routers(file_name):
+    with open(file_name) as fp:
+        data = fp.read()
 
+    return json.loads(data)
 
-if __name__ == '__main__':
-    main()
+def find_routes(routers, src_dest_pairs):
+    for src_ip, dest_ip in src_dest_pairs:
+        path = dijkstra(routers, src_ip, dest_ip)
+        print(f"{src_ip:>15s} -> {dest_ip:<15s}  {repr(path)}")
 
+def usage():
+    print("usage: dijkstra.py infile.json", file=sys.stderr)
+
+def main(argv):
+    try:
+        router_file_name = argv[1]
+    except:
+        usage()
+        return 1
+
+    json_data = read_routers(router_file_name)
+
+    routers = json_data["routers"]
+    routes = json_data["src-dest"]
+
+    find_routes(routers, routes)
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
